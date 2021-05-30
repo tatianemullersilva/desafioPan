@@ -20,68 +20,65 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
 
-import br.com.pan.model.Endereco;
-import br.com.pan.repository.EnderecoRepository;
+import br.com.pan.model.Estado;
+import br.com.pan.model.Municipio;
+import br.com.pan.repository.MunicipioRepository;
 
 @RestController
-@RequestMapping("/endereco")
+@RequestMapping("/municipio")
 @CrossOrigin(origins = "*")
-public class EnderecoController {
+public class MunicipioController {
 
 	@Autowired
-	private EnderecoRepository enderecoRepository;
-
-//	private ValidaCPF validaCPF;
-
+	private MunicipioRepository municipioRepository;
+	
 	@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Collection<Endereco>> buscarTodos() {
-		return new ResponseEntity<Collection<Endereco>>(this.enderecoRepository.findAll(), HttpStatus.OK);
+	public ResponseEntity<Collection<Municipio>> buscarTodos() {
+		return new ResponseEntity<Collection<Municipio>>(this.municipioRepository.findAll(), HttpStatus.OK);
 	}
 
-	@RequestMapping(value = "/cep/{cep}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Endereco> buscarCep(@PathVariable String cep) {
+	@RequestMapping(value = "/id/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Municipio> buscarId(@PathVariable Integer id) {
 		HttpStatus status = HttpStatus.OK;
-		cep = cep.length() == 8 ? cep.substring(0, 5) + '-' + cep.substring(5, 8) : cep;
-		Endereco result = this.enderecoRepository.findByCep(cep);
+		Municipio result = this.municipioRepository.findById(id).get();
 		if (result == null) {
-			result = this.buscarViaCep(cep);
+			result = this.buscarViaId(id);
 			if (result == null) {
 				status = HttpStatus.NOT_FOUND;
 			}
 			else {
-			result = this.enderecoRepository.save(result);
+			result = this.municipioRepository.save(result);
 			}
 		}
-		return new ResponseEntity<Endereco>(result, status);
+		return new ResponseEntity<Municipio>(result, status);
 	}
 
-	public Endereco buscarViaCep(String cep) {
+	public Municipio buscarViaId(Integer id) {
 		Gson gson = new Gson();
 		try {
-			URL url = new URL("http://viacep.com.br/ws/" + cep + "/json");
+			URL url = new URL("http://servicodados.ibge.gov.br/api/v1/localidades/estados/ " + id + "/json");
 			URLConnection urlConnection = url.openConnection();
 			InputStream is = urlConnection.getInputStream();
 			BufferedReader br = new BufferedReader(new InputStreamReader(is));
-			Endereco end = gson.fromJson(br, Endereco.class);
-			return end;
+			Municipio municipio = gson.fromJson(br, Municipio.class);
+			return municipio;
 		} catch (Exception e) {
 			return null;
 		}
 	}
 
 	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Endereco> cadastrar(@RequestBody Endereco enderecoRequest) {
-
-		Endereco endereco = this.enderecoRepository.save(enderecoRequest);
-		HttpStatus status = endereco == null ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
-		return new ResponseEntity<Endereco>(endereco, status);
+	public ResponseEntity<Municipio> cadastrar(@RequestBody Municipio municipioRequest) {
+		Municipio municipio = this.municipioRepository.save(municipioRequest);
+		HttpStatus status = municipio == null ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
+		return new ResponseEntity<Municipio>(municipio, status);
 	}
 
 	@RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Endereco> atualizar(@RequestBody Endereco enderecoRequest) {
-		Endereco endereco = this.enderecoRepository.save(enderecoRequest);
-		HttpStatus status = endereco == null ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
-		return new ResponseEntity<Endereco>(endereco, status);
+	public ResponseEntity<Municipio> atualizar(@RequestBody Municipio municipioRequest) {
+		Municipio municipio = this.municipioRepository.save(municipioRequest);
+		HttpStatus status = municipio == null ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
+		return new ResponseEntity<Municipio>(municipio, status);
 	}
 
 }

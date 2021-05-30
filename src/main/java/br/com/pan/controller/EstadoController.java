@@ -20,68 +20,64 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
 
-import br.com.pan.model.Endereco;
-import br.com.pan.repository.EnderecoRepository;
+import br.com.pan.model.Estado;
+import br.com.pan.repository.EstadoRepository;
 
 @RestController
-@RequestMapping("/endereco")
+@RequestMapping("/estado")
 @CrossOrigin(origins = "*")
-public class EnderecoController {
+public class EstadoController {
 
 	@Autowired
-	private EnderecoRepository enderecoRepository;
-
-//	private ValidaCPF validaCPF;
-
+	private EstadoRepository estadoRepository;
+	
 	@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Collection<Endereco>> buscarTodos() {
-		return new ResponseEntity<Collection<Endereco>>(this.enderecoRepository.findAll(), HttpStatus.OK);
+	public ResponseEntity<Collection<Estado>> buscarTodos() {
+		return new ResponseEntity<Collection<Estado>>(this.estadoRepository.findAll(), HttpStatus.OK);
 	}
 
-	@RequestMapping(value = "/cep/{cep}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Endereco> buscarCep(@PathVariable String cep) {
+	@RequestMapping(value = "/nome/{nome}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Estado> buscarNome(@PathVariable String nome) {
 		HttpStatus status = HttpStatus.OK;
-		cep = cep.length() == 8 ? cep.substring(0, 5) + '-' + cep.substring(5, 8) : cep;
-		Endereco result = this.enderecoRepository.findByCep(cep);
+		Estado result = this.estadoRepository.findByNome(nome);
 		if (result == null) {
-			result = this.buscarViaCep(cep);
+			result = this.buscarViaNome(nome);
 			if (result == null) {
 				status = HttpStatus.NOT_FOUND;
 			}
 			else {
-			result = this.enderecoRepository.save(result);
+			result = this.estadoRepository.save(result);
 			}
 		}
-		return new ResponseEntity<Endereco>(result, status);
+		return new ResponseEntity<Estado>(result, status);
 	}
 
-	public Endereco buscarViaCep(String cep) {
+	public Estado buscarViaNome(String nome) {
 		Gson gson = new Gson();
 		try {
-			URL url = new URL("http://viacep.com.br/ws/" + cep + "/json");
+			URL url = new URL("http://servicodados.ibge.gov.br/api/v1/localidades/estados/ " + nome + "/json");
 			URLConnection urlConnection = url.openConnection();
 			InputStream is = urlConnection.getInputStream();
 			BufferedReader br = new BufferedReader(new InputStreamReader(is));
-			Endereco end = gson.fromJson(br, Endereco.class);
-			return end;
+			Estado estado = gson.fromJson(br, Estado.class);
+			return estado;
 		} catch (Exception e) {
 			return null;
 		}
 	}
 
 	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Endereco> cadastrar(@RequestBody Endereco enderecoRequest) {
-
-		Endereco endereco = this.enderecoRepository.save(enderecoRequest);
-		HttpStatus status = endereco == null ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
-		return new ResponseEntity<Endereco>(endereco, status);
+	public ResponseEntity<Estado> cadastrar(@RequestBody Estado estadoRequest) {
+		Estado estado = this.estadoRepository.save(estadoRequest);
+		HttpStatus status = estado == null ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
+		return new ResponseEntity<Estado>(estado, status);
 	}
 
 	@RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<Endereco> atualizar(@RequestBody Endereco enderecoRequest) {
-		Endereco endereco = this.enderecoRepository.save(enderecoRequest);
-		HttpStatus status = endereco == null ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
-		return new ResponseEntity<Endereco>(endereco, status);
+	public ResponseEntity<Estado> atualizar(@RequestBody Estado enderecoRequest) {
+		Estado estado = this.estadoRepository.save(enderecoRequest);
+		HttpStatus status = estado == null ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
+		return new ResponseEntity<Estado>(estado, status);
 	}
 
 }

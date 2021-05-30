@@ -2,7 +2,6 @@ package br.com.pan.controller;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,28 +27,25 @@ public class UsuarioController {
 
 	@Autowired
 	private UsuarioRepository usuarioRepository;
-	
+
 	@Autowired
 	private EnderecoRepository enderecoRepository;
-
-
-	private ValidaCPF validaCPF;
 
 	@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Collection<Usuario>> buscarTodos() {
 		return new ResponseEntity<Collection<Usuario>>(this.usuarioRepository.findAll(), HttpStatus.OK);
 	}
 
-	@RequestMapping(value = "/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(value = "/id/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Usuario> detalhes(@PathVariable Integer id) {
-		Usuario teste = this.usuarioRepository.findById(id).get();
-		return new ResponseEntity<Usuario>(teste, HttpStatus.OK);
+		Usuario usu = this.usuarioRepository.findById(id).get();
+		return new ResponseEntity<Usuario>(usu, HttpStatus.OK);
 	}
-	
-	@RequestMapping(value = "/{cpf}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+
+	 @RequestMapping(value = "/cpf/{cpf}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Usuario> detalhes(@PathVariable String cpf) {
-		Usuario teste = this.usuarioRepository.findByCpf(cpf).get(0);
-		return new ResponseEntity<Usuario>(teste, HttpStatus.OK);
+		Usuario usu = this.usuarioRepository.findByCpf(cpf);
+		return new ResponseEntity<Usuario>(usu, HttpStatus.OK);
 	}
 
 	@RequestMapping(method = { RequestMethod.POST,
@@ -59,8 +55,8 @@ public class UsuarioController {
 			return new ResponseEntity<Usuario>(HttpStatus.BAD_REQUEST);
 		}
 
-		List<Usuario> aux = this.usuarioRepository.findByCpf(usuarioRequest.getCpf());
-		if (aux.size() > 0 && aux.get(0).getId() != usuarioRequest.getId()) {
+		Usuario aux = this.usuarioRepository.findByCpf(usuarioRequest.getCpf());
+		if (aux!=null && aux.getId() != usuarioRequest.getId()) {
 			return new ResponseEntity<>(HttpStatus.CONFLICT);
 		}
 		if (usuarioRequest.getId() == null) {
@@ -69,24 +65,22 @@ public class UsuarioController {
 
 		usuarioRequest.setDtAlteracao(LocalDate.now());
 		if (usuarioRequest.getEndereco().getId() == null) {
-		usuarioRequest.getEndereco().setId(this.verificaEndereco(usuarioRequest.getEndereco()));
+			usuarioRequest.getEndereco().setId(this.verificaEndereco(usuarioRequest.getEndereco()));
 		}
-		
 		Usuario usuario = this.usuarioRepository.save(usuarioRequest);
 		HttpStatus status = usuario == null ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
 		return new ResponseEntity<Usuario>(usuario, status);
 	}
 
 	private Integer verificaEndereco(Endereco end) {
-		String cep = end.getCep().length() == 8 ? end.getCep().substring(0, 5) + '-' + end.getCep().substring(5, 8) : end.getCep();
+		String cep = end.getCep().length() == 8 ? end.getCep().substring(0, 5) + '-' + end.getCep().substring(5, 8)
+				: end.getCep();
 		Endereco result = this.enderecoRepository.findByCep(cep);
 		if (result == null) {
 			result = new EnderecoController().buscarViaCep(cep);
-			result= this.enderecoRepository.save(result);
-			
+			result = this.enderecoRepository.save(result);
 		}
-		//ResponseEntity<Endereco> result = new EnderecoController().buscarCep(end.getCep());
-		if(result!=null) {
+		if (result != null) {
 			return result.getId();
 		}
 		return null;
@@ -100,7 +94,7 @@ public class UsuarioController {
 		if (usuario != null) {
 			this.usuarioRepository.delete(usuario);
 			mensagem = "Registro deletado com sucesso!";
-		}else {
+		} else {
 			mensagem = "Não foi possível excluír o registro!";
 		}
 
