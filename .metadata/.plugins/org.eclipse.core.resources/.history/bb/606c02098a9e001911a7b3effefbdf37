@@ -1,0 +1,68 @@
+package br.com.softplan.controller;
+
+import java.time.LocalDate;
+import java.util.Collection;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import br.com.softplan.model.Pessoa;
+import br.com.softplan.repository.EnderecoRepository;
+
+@RestController("/endereco")
+public class EnderecoController {
+
+	@Autowired
+	private EnderecoRepository enderecoRepository;
+	
+//	private ValidaCPF validaCPF;
+
+	@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Collection<Pessoa>> buscarTodos() {
+		return new ResponseEntity<Collection<Pessoa>>(this.enderecoRepository.findAll(), HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Pessoa> detalhes(@PathVariable Integer id) {
+		return new ResponseEntity<Pessoa>(this.enderecoRepository.findById(id).orElse(null), HttpStatus.OK);
+	}
+
+	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Pessoa> cadastrar(@RequestBody Pessoa pessoaRequest) {
+//		if(!validaCPF.isCPF(pessoaRequest.getCpf())) {
+//			return new ResponseEntity<Pessoa>( HttpStatus.BAD_REQUEST);
+//		}
+		
+		pessoaRequest.setDtcadastro(LocalDate.now());
+		Pessoa pessoa = this.enderecoRepository.save(pessoaRequest);
+		HttpStatus status = pessoa == null ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
+		return new ResponseEntity<Pessoa>(pessoa, status);
+	}
+
+	@RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<Pessoa> atualizar(@RequestBody Pessoa pessoaRequest) {
+//		if(!validaCPF.isCPF(pessoaRequest.getCpf())) {
+//			return new ResponseEntity<Pessoa>( HttpStatus.BAD_REQUEST);
+//		}
+		pessoaRequest.setDtAlteracao(LocalDate.now());
+		Pessoa pessoa = this.enderecoRepository.save(pessoaRequest);
+		HttpStatus status = pessoa == null ? HttpStatus.BAD_REQUEST : HttpStatus.OK;
+		return new ResponseEntity<Pessoa>(pessoa, status);
+	}
+
+	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+	public ResponseEntity<Pessoa> deletar(@PathVariable Integer id) {
+		Pessoa pessoa = this.enderecoRepository.findById(id).orElse(null);
+		HttpStatus status = pessoa == null ? HttpStatus.NOT_FOUND : HttpStatus.OK;
+		if (pessoa != null)
+			this.enderecoRepository.delete(pessoa);
+		return new ResponseEntity<Pessoa>(status);
+	}
+}

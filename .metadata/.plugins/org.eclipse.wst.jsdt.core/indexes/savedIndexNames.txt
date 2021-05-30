@@ -1,0 +1,7 @@
+INDEX VERSION 1.4+E:\Documentos\Fábio Higor\sts-4.3.0.RELEASE\workspace\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
+3214319170.index
+1742082831.index
+1517520537.index
+2503956554.index
+1876986056.index
+4063355476.index
